@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impossible Chess Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 0;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .cell.black {
+            background-color: #769656;
+        }
+
+        .cell.white {
+            background-color: #eeeed2;
+        }
+
+        .cell.highlight {
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Impossible Chess Game</h1>
+        <div id="chessboard" class="chessboard"></div>
+    </div>
+    <script>
+        const pieces = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        };
+
+        let board = [
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        ];
+
+        let selectedCell = null;
+        let isWhiteTurn = true;
+
+        function createBoard() {
+            const chessboard = document.getElementById('chessboard');
+            chessboard.innerHTML = '';
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.classList.add((i + j) % 2 === 0 ? 'white' : 'black');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.innerHTML = pieces[board[i][j]] || '';
+                    cell.addEventListener('click', onCellClick);
+                    chessboard.appendChild(cell);
+                }
+            }
+        }
+
+        function onCellClick(event) {
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (selectedCell) {
+                movePiece(selectedCell, { row, col });
+                selectedCell = null;
+                createBoard();
+                setTimeout(robotMove, 500); // Robot makes a move after 0.5 second
+            } else if (board[row][col] !== ' ' && isPieceWhite(board[row][col]) === isWhiteTurn) {
+                selectedCell = { row, col };
+                highlightCell(row, col);
+            }
+        }
+
+        function highlightCell(row, col) {
+            createBoard();
+            const cell = document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
+            cell.classList.add('highlight');
+        }
+
+        function movePiece(from, to) {
+            const piece = board[from.row][from.col];
+            board[from.row][from.col] = ' ';
+            board[to.row][to.col] = piece;
+            isWhiteTurn = !isWhiteTurn;
+        }
+
+        function isPieceWhite(piece) {
+            return piece === piece.toUpperCase();
+        }
+
+        function robotMove() {
+            const moves = getAllValidMoves(false);
+            if (moves.length > 0) {
+                const move = moves[Math.floor(Math.random() * moves.length)];
+                movePiece(move.from, move.to);
+                createBoard();
+            }
+        }
+
+        function getAllValidMoves(isWhite) {
+            const moves = [];
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    if (board[i][j] !== ' ' && isPieceWhite(board[i][j]) === isWhite) {
+                        const validMoves = getValidMoves({ row: i, col: j });
+                        for (const move of validMoves) {
+                            moves.push({ from: { row: i, col: j }, to: move });
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function getValidMoves(from) {
+            // This function should return all valid moves for a given piece.
+            // For simplicity, we'll implement basic movement logic for pawns, rooks, and knights.
+            const piece = board[from.row][from.col];
+            const moves = [];
+
+            if (piece.toLowerCase() === 'p') {
+                const direction = isPieceWhite(piece) ? -1 : 1;
+                if (board[from.row + direction][from.col] === ' ') {
+                    moves.push({ row: from.row + direction, col: from.col });
+                }
+            }
+
+            // Additional movement logic for other pieces can be added here.
+
+            return moves;
+        }
+
+        window.onload = createBoard;
+    </script>
+</body>
+</html>
